@@ -184,10 +184,10 @@ function makeRadio(x, y) {
     let pal;
     if (palnum == 0) {
         pal = [0x44524a, 0x4aca7b, 0x276843, 0x38995f, 0x276843, 0x3399cc];
-    } else if (palnum == 3) {
-        pal = [0x114411, 0x22dd22, 0x226622, 0x22aa22, 0x226622, 0x226622];
     } else if (palnum == 2) {
         pal = [0x113377, 0x22aaff, 0x2266aa, 0x2288cc, 0x2266aa, 0x2266aa];
+    } else if (palnum == 3) {
+        pal = [0x114411, 0x22dd22, 0x226622, 0x22aa22, 0x226622, 0x226622];
     } else if (palnum == 4) {
         pal = [0x551111, 0xdd3333, 0x771111, 0xaa2222, 0x771111, 0xaa2222];
     } else if (palnum == 5) {
@@ -274,5 +274,5 @@ menu.addOption("Load playlist by ID", function(){
 })
 menu.addOption("Play requests next in playlist", ()=>{doPlaylistRequests(...requests.map(e=>e[1]));requests = []});
 menu.addCheckboxOption("Hide video", ()=>ytcontain.style.display="none", ()=>ytcontain.style.display="");
-menu.addOption("Increment palette", ()=>palnum = (palnum+1)%4);
-menu.addOption("Decrement palette", ()=>palnum = mod(palnum-1, 4));
+menu.addOption("Increment palette", ()=>palnum = (palnum+1)%5);
+menu.addOption("Decrement palette", ()=>palnum = mod(palnum-1, 5));
