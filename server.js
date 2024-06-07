@@ -114,26 +114,27 @@ async function doPlaylistRequests(...id) {
     ytobject.seekTo(t);
 }
 var listenerList = [];
-function handlePing(arg, sender) {
+function handlePing(arg, e) {
     network.cmd("limeradio_pong "+currentVideo+" "+ytobject.getCurrentTime(), true);
-    if (listenerList.includes(sender)) return;
-    listenerList.push(sender);
+    if (listenerList.map(e=>e[0]).includes(e.sender)) return;
+    listenerList.push([e.sender, e.username]);
 }
 async function listenChecker() {
-    let passedList, check;
+    let passedList;
+    function check(e) {
+        if (!listenerList.map(e=>e[0]).includes(e.sender)) return;
+        if (e.data != "limeradio_here") return;
+        if (passedList.includes(e.sender)) return;
+        passedList.push(e.sender);
+    });
     while (true) {
         if (ABORT) return;
         network.cmd("limeradio_check", true);
         passedList = [];
-        w.on("cmd", check = function(e) {
-            if (!listenerList.includes(e.sender)) return;
-            if (e.data != "limeradio_here") return;
-            if (passedList.includes(e.sender)) return;
-            passedList.push(e.sender);
-        });
+        w.on("cmd", check);
         await sleep(2000);
         w.off("cmd", check);
-        listenerList = [...passedList];
+        listenerList = listenerList.filter(e=>passedList.includes(e[0]));
         await sleep(8000);
     }
 }
@@ -143,9 +144,9 @@ w.on("cmd", function(e){
     let cmd = e.data.slice(10).split(" ");
     if (cmd.last() != state.userModel.username) return;
     if (cmd[0] == "request") { handleRequest(cmd, e.username) }
-    else if (cmd[0] == "ping") { handlePing(cmd, e.sender) }
+    else if (cmd[0] == "ping") { handlePing(cmd, e) }
     else if (cmd[0] == "byebye") {
-        let index = listenerList.indexOf(e.sender);
+        let index = listenerList.findIndex(e=>e[0]==e.sender);
         if (index == -1) return;
         listenerList.splice(e.sender, 1);
     }
