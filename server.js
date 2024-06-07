@@ -126,7 +126,7 @@ async function listenChecker() {
         if (e.data != "limeradio_here") return;
         if (passedList.includes(e.sender)) return;
         passedList.push(e.sender);
-    });
+    };
     while (true) {
         if (ABORT) return;
         network.cmd("limeradio_check", true);
