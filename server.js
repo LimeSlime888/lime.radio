@@ -183,7 +183,7 @@ var palnum = 1;
 function makeRadio(x, y) {
     let pal;
     if (palnum == 0) {
-        pal = [0x44524a, 0x4aca7b, 0x276843, 0x38995f, 0x276843, 0x3399cc];
+        pal = [0x44524a, 0x38995d, 0x276843, 0x1c7f72, 0x6688, 0x2288aa];
     } else if (palnum == 2) {
         pal = [0x113377, 0x22aaff, 0x2266aa, 0x2288cc, 0x2266aa, 0x2266aa];
     } else if (palnum == 3) {
