@@ -22,7 +22,7 @@ w.loadScript("https://www.youtube.com/player_api", async function(){
         height: '270',
         width: '480',
         events: {
-            onReady: e=>{ network.cmd("limeradio_ping "+listeningTo); }
+            onReady: e=>{ network.cmd("limeradio_ping "+listeningTo, true); }
         }
     });
     let once;
