@@ -67,15 +67,17 @@ async function pushToPlaylist(...id) {
     let t = ytobject.getCurrentTime();
     let i = ytobject.getPlaylistIndex();
     ytobject.loadPlaylist(np, i);
+    w.doAnnounce("", "request");
     await sleep(500);
     ytobject.seekTo(t);
 }
 async function doPlaylistRequests(...id) {
     let t = ytobject.getCurrentTime();
     let i = ytobject.getPlaylistIndex();
-    let np = ytobject.getPlaylist().splice(i+1, 0, ...id);
+    let np = ytobject.getPlaylist() ?? [];
+    np.splice(i+1, 0, ...id);
     ytobject.loadPlaylist(np, i);
-    await sleep(500);
+    await sleep(800);
     ytobject.seekTo(t);
 }
 w.doAnnounce("loading requests...", "request");
