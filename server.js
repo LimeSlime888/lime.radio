@@ -236,7 +236,7 @@ function makeRadio(x, y) {
     queueTextToXY(listenerList.length, pal[5], x+2, y+4, _, _, {bold:1});
     queueTextToXY(" listening", pal[5], x+2+(listenerList.length+"").length, y+4);
     counters[3] = " ".repeat((listenerList.length+"").length+10);
-    queueTextToXY("made by lime.owot\ninspired by ", pal[1], x+2, y+5, _, _, {italic:1});
+    queueTextToXY(`host: ${state.userModel.username}\ninspired by `, pal[1], x+2, y+5, _, _, {italic:1});
     queueTextToXY("Boo's Beats!", 0xa6a6a6, x+14, y+6, _, _, {italic:1});
     queueTextToXY("≫ files.catbox.moe/yxg22k.js", palnum > 1 ? pal[5] : 0x2ad0be, x+6, y+7, _, _, {bold:1});
     queueTextToXY("  \n".repeat(6), 0x96b4a3, x+1+timer%17*2, y+1, _, -1)
