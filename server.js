@@ -63,12 +63,12 @@ async function changeVideo(id="ci5MzuiXBJA") {
     titleTimer = 0;
 }
 async function pushToPlaylist(...id) {
-    let np = ytobject.getPlaylist().concat(...id);
     let t = ytobject.getCurrentTime();
     let i = ytobject.getPlaylistIndex();
+    let np = ytobject.getPlaylist().concat(...id);
     ytobject.loadPlaylist(np, i);
     w.doAnnounce("", "request");
-    await sleep(500);
+    await sleep(800);
     ytobject.seekTo(t);
 }
 async function doPlaylistRequests(...id) {
