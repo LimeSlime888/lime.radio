@@ -62,24 +62,6 @@ async function changeVideo(id="ci5MzuiXBJA") {
     currentVideo = id;
     titleTimer = 0;
 }
-async function pushToPlaylist(...id) {
-    let t = ytobject.getCurrentTime();
-    let i = ytobject.getPlaylistIndex();
-    let np = ytobject.getPlaylist().concat(...id);
-    ytobject.loadPlaylist(np, i);
-    w.doAnnounce("", "request");
-    await sleep(800);
-    ytobject.seekTo(t);
-}
-async function doPlaylistRequests(...id) {
-    let t = ytobject.getCurrentTime();
-    let i = ytobject.getPlaylistIndex();
-    let np = ytobject.getPlaylist() ?? [];
-    np.splice(i+1, 0, ...id);
-    ytobject.loadPlaylist(np, i);
-    await sleep(800);
-    ytobject.seekTo(t);
-}
 w.doAnnounce("loading requests...", "request");
 w.doAnnounce("", "request");
 w.ui.announcements.request.text.addEventListener("click", function(){
@@ -99,22 +81,24 @@ function handleRequest(arg, user) {
     });
 }
 async function pushToPlaylist(...id) {
-    let np = ytobject.getPlaylist().concat(...id);
     let t = ytobject.getCurrentTime();
     let i = ytobject.getPlaylistIndex();
+    let np = ytobject.getPlaylist().concat(...id);
     ytobject.loadPlaylist(np, i);
-    await sleep(500);
+    await sleep(800);
     ytobject.seekTo(t);
 }
 async function doPlaylistRequests(...id) {
     let t = ytobject.getCurrentTime();
     let i = ytobject.getPlaylistIndex();
-    let np = ytobject.getPlaylist();
+    let np = ytobject.getPlaylist() ?? [];
     np.splice(i+1, 0, ...id);
     ytobject.loadPlaylist(np, i);
-    await sleep(500);
+    w.doAnnounce("", "request");
+    await sleep(800);
     ytobject.seekTo(t);
 }
+var abortCount = 0;
 var listenerList = [];
 function handlePing(arg, e) {
     network.cmd("limeradio_pong "+currentVideo+" "+ytobject.getCurrentTime(), true);
@@ -122,15 +106,14 @@ function handlePing(arg, e) {
     listenerList.push([e.sender, e.username]);
 }
 async function listenChecker() {
-    let passedList;
+    let [a, passedList] = [abortCount];
     function check(e) {
         if (!listenerList.map(e=>e[0]).includes(e.sender)) return;
         if (e.data != "limeradio_here") return;
         if (passedList.includes(e.sender)) return;
         passedList.push(e.sender);
     };
-    while (true) {
-        if (ABORT) return;
+    while (abortCount == a) {
         network.cmd("limeradio_check", true);
         passedList = [];
         w.on("cmd", check);
@@ -244,15 +227,26 @@ function makeRadio(x, y) {
     queueTextToXY("  \n".repeat(6), 0x96b4a3, x+1+timer%17*2, y+1, _, -1)
     flushQueue();
 }
-var ABORT;
 var timer = 0;
 async function canvasRadioMain() {
-    while (true) {
+    let a = abortCount;
+    while (abortCount == a) {
         makeRadio(...radioPos);
         ++timer;
-        if (ABORT) return;
         await sleep(200);
     }
+}
+function shutOffRadio() {
+    queueTextToXY("offline", 0xff0000, radioPos[0]+27, radioPos[1], _, 1, {bold:1});
+    makeRadio(...radioPos);
+    abortCount++;
+}
+async function startRadio() {
+    canvasRadioMain();
+    listenChecker();
+    network.cmd("limeradio_change "+ytobject.getVideoData().video_id, true);
+    await sleep(500);
+    network.cmd("limeradio_seek "+ytobject.getCurrentTime(), true);
 }
 menu.addOption("Load video", function(){
     let id = prompt("gimme video id...", "ci5MzuiXBJA");
@@ -279,3 +273,6 @@ menu.addOption("Play requests next in playlist", ()=>{doPlaylistRequests(...requ
 menu.addCheckboxOption("Hide video", ()=>ytcontain.style.display="none", ()=>ytcontain.style.display="");
 menu.addOption("Increment palette", ()=>palnum = (palnum+1)%5);
 menu.addOption("Decrement palette", ()=>palnum = mod(palnum-1, 5));
+menu.addOption("Start radio", ()=>startRadio());
+w.doAnnounce("Use the menu to start writing the radio to the canvas.");
+menu.addOption("Shut off radio", ()=>shutOffRadio());
