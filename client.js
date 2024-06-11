@@ -11,6 +11,19 @@ player.id = "player";
 ytcontain.appendChild(player);
 var listeningTo = prompt("enter broadcaster's username", "lime.owot");
 w.broadcastReceive(1);
+function reping() {
+    let once;
+    w.on("cmd", once = async function(e){
+        if ((e.username ?? "") != listeningTo) return;
+        if (!e.data.startsWith("limeradio_pong ")) return;
+        w.off("cmd", once);
+        let [id, time] = e.data.slice(15).split(" ");
+        time = Number(time);
+        changeVideo(id);
+        await new Promise(r=>setTimeout(r, 500));
+        ytobject.seekTo(time);
+    });
+}
 w.loadScript("https://www.youtube.com/player_api", async function(){
     await new Promise(async function(r){
         while (true) {
@@ -25,23 +38,18 @@ w.loadScript("https://www.youtube.com/player_api", async function(){
             onReady: e=>{ network.cmd("limeradio_ping "+listeningTo, true); }
         }
     });
-    let once;
-    w.on("cmd", once = async function(e){
-        if ((e.username ?? "") != listeningTo) return;
-        if (!e.data.startsWith("limeradio_pong ")) return;
-        w.off("cmd", once);
-        let [id, time] = e.data.slice(15).split(" ");
-        time = Number(time);
-        changeVideo(id);
-        await new Promise(r=>setTimeout(r, 500));
-        ytobject.seekTo(time);
-    });
+    reping();
     window.addEventListener("beforeunload", function(){
         network.cmd("limeradio_byebye "+listeningTo);
     })
     player.remove();
     player = ytobject.g;
 });
+w.on("socketOpen", socket.onopen);
+w.on("socketOpen", ()=>reping());
+socket.onopen = function() {
+    w.emit("socketOpen")
+}
 async function changeVideo(id) {
     if (id == ytobject.getVideoData().video_id) {
         ytobject.seekTo(0);return
