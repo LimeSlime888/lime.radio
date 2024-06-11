@@ -34,6 +34,7 @@ w.loadScript("https://www.youtube.com/player_api", async function(){
     ytobject = new YT.Player("player", {
         height: '270',
         width: '480',
+        videoId: 'NvGnGiveUUp',
         events: {
             onReady: e=>{ network.cmd("limeradio_ping "+listeningTo, true); }
         }
