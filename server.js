@@ -44,13 +44,6 @@ w.loadScript("https://www.youtube.com/player_api", async function(){
     })
     player.remove();
     player = ytobject.g;
-    await new Promise(async function(r){
-        while (true) {
-            await new Promise(r=>setTimeout(r, 200));
-            if (ytobject.getVideoData) return r();
-        }
-    });
-    canvasRadioMain();
 });
 var currentVideo = "ci5MzuiXBJA";
 async function changeVideo(id="ci5MzuiXBJA") {
@@ -123,7 +116,6 @@ async function listenChecker() {
         await sleep(8000);
     }
 }
-listenChecker();
 w.on("cmd", function(e){
     if (!e.data.startsWith("limeradio_")) return;
     let cmd = e.data.slice(10).split(" ");
@@ -273,6 +265,16 @@ menu.addOption("Play requests next in playlist", ()=>{doPlaylistRequests(...requ
 menu.addCheckboxOption("Hide video", ()=>ytcontain.style.display="none", ()=>ytcontain.style.display="");
 menu.addOption("Increment palette", ()=>palnum = (palnum+1)%5);
 menu.addOption("Decrement palette", ()=>palnum = mod(palnum-1, 5));
-menu.addOption("Start radio", ()=>startRadio());
+menu.addOption("Start radio", ()=>function(){
+    radioPos ??= convertTileToXY(...cursorCoords.swap(1, 2));
+    startRadio();
+});
 w.doAnnounce("Use the menu to start writing the radio to the canvas.");
 menu.addOption("Shut off radio", ()=>shutOffRadio());
+menu.addOption("Relocate radio", ()=>function(){
+    radioPos = convertTileToXY(...cursorCoords.swap(1, 2));
+});
+menu.addOption("Start and relocate radio", ()=>function(){
+    radioPos = convertTileToXY(...cursorCoords.swap(1, 2));
+    startRadio();
+});
