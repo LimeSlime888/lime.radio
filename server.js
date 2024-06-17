@@ -265,16 +265,16 @@ menu.addOption("Play requests next in playlist", ()=>{doPlaylistRequests(...requ
 menu.addCheckboxOption("Hide video", ()=>ytcontain.style.display="none", ()=>ytcontain.style.display="");
 menu.addOption("Increment palette", ()=>palnum = (palnum+1)%5);
 menu.addOption("Decrement palette", ()=>palnum = mod(palnum-1, 5));
-menu.addOption("Start radio", ()=>function(){
+menu.addOption("Start radio", function(){
     radioPos ??= convertTileToXY(...cursorCoords.swap(1, 2));
     startRadio();
 });
 w.doAnnounce("Use the menu to start writing the radio to the canvas.");
 menu.addOption("Shut off radio", ()=>shutOffRadio());
-menu.addOption("Relocate radio", ()=>function(){
+menu.addOption("Relocate radio", function(){
     radioPos = convertTileToXY(...cursorCoords.swap(1, 2));
 });
-menu.addOption("Start and relocate radio", ()=>function(){
+menu.addOption("Start and relocate radio", function(){
     radioPos = convertTileToXY(...cursorCoords.swap(1, 2));
     startRadio();
 });
