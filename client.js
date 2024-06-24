@@ -17,12 +17,13 @@ function reping() {
         if ((e.username ?? "") != listeningTo) return;
         if (!e.data.startsWith("limeradio_pong ")) return;
         w.off("cmd", once);
-        let [id, time] = e.data.slice(15).split(" ");
+        let [id, time, pause] = e.data.slice(15).split(" ");
         time = Number(time);
         changeVideo(id);
         await new Promise(r=>setTimeout(r, 500));
         ytobject.seekTo(time);
     });
+    network.cmd("limeradio_ping "+listeningTo, true);
 }
 w.loadScript("https://www.youtube.com/player_api", async function(){
     await new Promise(async function(r){
@@ -36,10 +37,9 @@ w.loadScript("https://www.youtube.com/player_api", async function(){
         width: '480',
         videoId: 'NvGnGiveUUp',
         events: {
-            onReady: e=>{ network.cmd("limeradio_ping "+listeningTo, true); }
+            onReady: e=>{ reping() }
         }
     });
-    reping();
     window.addEventListener("beforeunload", function(){
         network.cmd("limeradio_byebye "+listeningTo);
     })
@@ -48,9 +48,7 @@ w.loadScript("https://www.youtube.com/player_api", async function(){
 });
 w.on("socketOpen", socket.onopen);
 w.on("socketOpen", ()=>reping());
-socket.onopen = function() {
-    w.emit("socketOpen")
-}
+socket.onopen = ()=>w.emit("socketOpen");
 async function changeVideo(id) {
     if (id == ytobject.getVideoData().video_id) {
         ytobject.seekTo(0);return
@@ -63,6 +61,7 @@ w.on("cmd", function(e){
     let cmd = e.data.slice(10).split(" ");
     if (cmd[0] == "change") { changeVideo(cmd[1]) }
     else if (cmd[0] == "seek") { ytobject.seekTo(Number(cmd[1]));ytobject.playVideo() }
+    else if (cmd[0] == "seekpause") { ytobject.seekTo(Number(cmd[1]));ytobject.pauseVideo() }
     else if (cmd[0] == "pause") { ytobject.pauseVideo() }
     else if (cmd[0] == "check") { network.cmd("limeradio_here") }
 });
