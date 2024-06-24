@@ -165,7 +165,7 @@ var palnum = 1;
 function makeRadio(x, y) {
     let pal;
     if (palnum == 0) {
-        pal = [0x44524a, 0x38995d, 0x276843, 0x1c7f72, 0x6688, 0x2288aa];
+        pal = [0x44524a, 0x77bbdd, 0x557788, 0x6699aa, 0x557788, 0x448866];
     } else if (palnum == 2) {
         pal = [0x113377, 0x22aaff, 0x2266aa, 0x2288cc, 0x2266aa, 0x2266aa];
     } else if (palnum == 3) {
@@ -219,7 +219,7 @@ function makeRadio(x, y) {
     counters[3] = " ".repeat((listenerList.length+"").length+10);
     queueTextToXY(`host: ${state.userModel.username}\ninspired by `, pal[1], x+2, y+5, _, _, {italic:1});
     queueTextToXY("Boo's Beats!", 0xa6a6a6, x+14, y+6, _, _, {italic:1});
-    queueTextToXY("≫ files.catbox.moe/yxg22k.js", palnum > 1 ? pal[5] : 0x2ad0be, x+6, y+7, _, _, {bold:1});
+    queueTextToXY("≫ files.catbox.moe/yxg22k.js", palnum > 1 ? pal[5] : palnum ? 0x2ad0be : 0x54e58b, x+6, y+7, _, _, {bold:1});
     queueTextToXY("  \n".repeat(6), 0x96b4a3, x+1+timer%17*2, y+1, _, -1)
     flushQueue();
 }
