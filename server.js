@@ -25,21 +25,25 @@ w.loadScript("https://www.youtube.com/player_api", async function(){
             onReady: e=>e.target.playVideo()
         }
     });
+    var ytPaused;
     ytobject.addEventListener("onStateChange", function(){
         let s = ytobject.getPlayerState();
         let id = ytobject.getVideoData().video_id;
         if (s == 1 && currentVideo != id) {
             if (currentVideo == id) {
-                network.cmd("limeradio_seek "+ytobject.getCurrentTime(), true)
+                network.cmd("limeradio_"+(ytPaused?"seekpause ":"seek ")+ytobject.getCurrentTime(), true);
             } else {
                 network.cmd("limeradio_change "+ytobject.getVideoData().video_id, true);
                 currentVideo = id;
                 timer = 0;
+                ytPaused = false
             }
         } else if (s == 2) {
-            network.cmd("limeradio_pause", true)
+            network.cmd("limeradio_pause", true);
+            ytPaused = true
         } else if (s == 3) {
-            network.cmd("limeradio_seek "+ytobject.getCurrentTime(), true)
+            network.cmd("limeradio_seek "+ytobject.getCurrentTime(), true);
+            ytPaused = false
         }
     })
     player.remove();
@@ -76,7 +80,7 @@ function handleRequest(arg, user) {
 async function pushToPlaylist(...id) {
     let t = ytobject.getCurrentTime();
     let i = ytobject.getPlaylistIndex();
-    let np = ytobject.getPlaylist().concat(...id);
+    let np = (ytobject.getPlaylist() ?? []).concat(...id);
     ytobject.loadPlaylist(np, i);
     await sleep(800);
     ytobject.seekTo(t);
@@ -94,7 +98,7 @@ async function doPlaylistRequests(...id) {
 var abortCount = 0;
 var listenerList = [];
 function handlePing(arg, e) {
-    network.cmd("limeradio_pong "+currentVideo+" "+ytobject.getCurrentTime(), true);
+    network.cmd("limeradio_pong "+currentVideo+" "+ytobject.getCurrentTime()+" "+ytPaused, true);
     if (listenerList.map(e=>e[0]).includes(e.sender)) return;
     listenerList.push([e.sender, e.username]);
 }
