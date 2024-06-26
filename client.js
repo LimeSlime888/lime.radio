@@ -50,7 +50,8 @@ w.on("socketOpen", socket.onopen);
 w.on("socketOpen", ()=>reping());
 socket.onopen = ()=>w.emit("socketOpen");
 async function changeVideo(id) {
-    if (id == ytobject.getVideoData().video_id) {
+    let d = ytobject.getVideoData()
+    if (d && id == d.video_id) {
         ytobject.seekTo(0);return
     }
     ytobject.loadVideoById(id);
