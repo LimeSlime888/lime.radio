@@ -9,6 +9,7 @@ document.body.appendChild(ytcontain);
 player = document.createElement("div");
 player.id = "player";
 ytcontain.appendChild(player);
+var ytPaused;
 w.loadScript("https://www.youtube.com/player_api", async function(){
     await new Promise(async function(r){
         while (true) {
@@ -25,7 +26,6 @@ w.loadScript("https://www.youtube.com/player_api", async function(){
             onReady: e=>e.target.playVideo()
         }
     });
-    var ytPaused;
     ytobject.addEventListener("onStateChange", function(){
         let s = ytobject.getPlayerState();
         let id = ytobject.getVideoData().video_id;
