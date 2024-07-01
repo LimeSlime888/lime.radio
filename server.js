@@ -132,7 +132,7 @@ w.on("cmd", function(e){
         listenerList.splice(e.sender, 1);
     }
 });
-var radioPos = convertTileToXY(...cursorCoords.swap(1, 2));
+var radioPos;
 var counters = ["", "", "", ""];
 function queueProgressBar(x, y, pal) {
     let time = [ytobject.getCurrentTime(), ytobject.getDuration()];
