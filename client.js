@@ -20,8 +20,8 @@ function reping() {
         let [id, time, pause] = e.data.slice(15).split(" ");
         time = Number(time);
         changeVideo(id);
-        await new Promise(r=>setTimeout(r, 500));
-        ytobject.seekTo(time);
+        await new Promise(r=>setTimeout(r, 1500));
+        ytobject.seekTo(time+1.5);
     });
     network.cmd("limeradio_ping "+listeningTo, true);
 }
