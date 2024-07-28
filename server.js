@@ -57,7 +57,7 @@ async function changeVideo(id="ci5MzuiXBJA") {
     }
     ytobject.loadVideoById(id);
     currentVideo = id;
-    titleTimer = 0;
+    r_timer = 0;
 }
 w.doAnnounce("loading requests...", "request");
 w.doAnnounce("", "request");
@@ -132,115 +132,93 @@ w.on("cmd", function(e){
         listenerList.splice(e.sender, 1);
     }
 });
-var radioPos;
-var counters = ["", "", "", ""];
-function queueProgressBar(x, y, pal) {
-    let time = [ytobject.getCurrentTime(), ytobject.getDuration()];
-    queueTextToXY([...counters[1]].fill(" ").join(""), 0x96b4a3, x, y);
-    let p = (ytobject.getPlayerState() ? time[0].toFixed(3) : time[1]) ?? 0;
-    queueTextToXY(p, pal[1], x, y);
-    queueTextToXY(" / "+time[1], pal[2], (p+"").length+x, y);
-    counters[1] = p + " / " + time[1];
-    let tl = Math.min(0, (time[0] - time[1]).toFixed(3));
-    queueTextToXY([...counters[2]].fill(" ").join(""), 0x2a7346, 32-[...counters[2]].length+x, y)
-    counters[2] = tl+"";
-    queueTextToXY(tl, pal[4], 32-(tl+"").length+x, y);
-    let bars = time[0] / time[1] * 32;
-    let dx = 0;
-    if (ytobject.getPlayerState()) {
-        while (dx < Math.min(32, Math.floor(bars))) {
-            queueCharToXY("=", pal[1], dx+x, y+1);dx++;
-        }
-        if (bars%1 >= 0.5 || bars >= 31 & bars < 32) { queueCharToXY("-", pal[3], dx+x, y+1);dx++ }
-        while (dx < 32) {
-            queueCharToXY("·", pal[4], dx+x, y+1);dx++;
-        }
-    } else {
-        while (dx < 32) {
-            queueCharToXY("=", rgb_to_int(...hsv_to_rgb(timer*10)), dx+x, y+1);dx++;
-        }
+var r_timer = 0;
+var r_annc = [[, "^w^"]]; // [prefix, suffix];
+var r_anncSpace = 24;
+var r_anncPadding = 1;
+var r_dispAnnc = r_annc[0];
+var r_anncTimer = 0;
+var r_relAnncPos = [5, 9];
+function getScrollText(text="Lorem ipsum dolor sit amet.", space=16, scroll=0) {
+    text = [...text];
+    let length = text.length;
+    scroll = Math.max(Math.min(length - space, scroll), 0);
+    if (space <= 0) return "";
+    if (length <= space) return text.join("");
+    text = text.slice(0+scroll, space+scroll);
+    if (scroll < length-space) {
+        text = text.slice(0, -1).concat("…");
     }
+    if (scroll > 0) {
+        text = ["…"].concat(text.slice(1));
+    }
+    return text.join("");
 }
-var palnum = 1;
 function makeRadio(x, y) {
-    let pal;
-    if (palnum == 0) {
-        pal = [0x44524a, 0x77bbdd, 0x557788, 0x6699aa, 0x557788, 0x448866];
-    } else if (palnum == 2) {
-        pal = [0x113377, 0x22aaff, 0x2266aa, 0x2288cc, 0x2266aa, 0x2266aa];
-    } else if (palnum == 3) {
-        pal = [0x114411, 0x22dd22, 0x226622, 0x22aa22, 0x226622, 0x226622];
-    } else if (palnum == 4) {
-        pal = [0x551111, 0xdd3333, 0x771111, 0xaa2222, 0x771111, 0xaa2222];
-    } else if (palnum == 5) {
-        pal = [
-            rgb_to_int(...hsv_to_rgb(timer*15, 0.2, 0.7)),
-            rgb_to_int(...hsv_to_rgb(timer*15, 0.8, 0.9)),
-            rgb_to_int(...hsv_to_rgb(timer*15, 0.8, 0.45)),
-            rgb_to_int(...hsv_to_rgb(timer*15, 0.7, 0.6)),
-            rgb_to_int(...hsv_to_rgb(timer*15, 0.6, 0.3)),
-            rgb_to_int(...hsv_to_rgb(timer*15+180, 0.8, 0.9))
-        ]
-    } else {
-        pal = [0x96b4a3, 0x54e58b, 0x2a7346, 0x2ad0be, 0xbcf1, 0xbcf1]
-    }
+    let pal = r_getPal();
     queueTextToXY("o\n|\n|\n|", pal[0], x+9, y-4);
     queueTextToXY("."+"–".repeat(34)+"."+"\n|".repeat(6), pal[0], x, y);
     queueTextToXY("lime.radio", 0x54e58b, x+2, y, _, _, {bold:1});
     queueTextToXY("'"+"=".repeat(34)+"'", pal[0], x, y+7);
     queueTextToXY("|\n".repeat(6), pal[0], x+35, y+1);
     let data = ytobject.getVideoData();
+    queueTextToXY([...counters[0]].fill(" ").join(""), pal[0], x+2, y+1);
     if (data) {
-        let timerMod = timer%64
-        let showTitle = timerMod < 40;
-        queueTextToXY([...counters[0]].fill(" ").join(""), pal[0], x+2, y+1);
+        let r_timerMod = r_timer%64
+        let showTitle = r_timerMod < 40;
         queueTextToXY(showTitle ? "playing: " : "by: ", pal[1], x+2, y+1);
         let toShow = (showTitle ? data.title : data.author) ?? "loading...";
         toShow = addSpaceToFullWidth(toShow);
-        let toShow2;
-        if (toShow.length > 28-showTitle*5) {
-            let scroll = showTitle ? timerMod : timerMod - 40;
-            scroll = Math.min(Math.max(0, scroll - 5), toShow.length-28+showTitle*5);
-            toShow2 = toShow.slice(0+scroll, 28-showTitle*5+scroll);
-            if (scroll < toShow.length-28+showTitle*5) {
-                toShow2 = toShow2.slice(0, -1) + "…"
-            }
-            if (scroll) {
-                toShow2 = "…" + toShow2.slice(1)
-            }
-        } else {toShow2 = toShow}
-        queueTextToXY(toShow2, pal[1], x+6+showTitle*5, y+1, _, _);
-        counters[0] = " ".repeat(4+showTitle*5+toShow2.length)
-    }
+        let scroll = showTitle ? r_timerMod : r_timerMod - 40;
+        scroll = Math.min(Math.max(0, scroll - 5), toShow.length-28+showTitle*5);
+        let sToShow = getScrollText(addSpaceToFullWidth(toShow), 28-showTitle*5, scroll);
+        queueTextToXY(sToShow, pal[1], x+6+showTitle*5, y+1, _, _);
+        counters[0] = " ".repeat(4+showTitle*5+[...sToShow].length);
+    } else {counters[0] = ""}
     queueProgressBar(x+2, y+2, pal);
     queueTextToXY([...counters[3]].fill(" ").join(""), pal[0], x+2, y+4);
     queueTextToXY(listenerList.length, pal[5], x+2, y+4, _, _, {bold:1});
     queueTextToXY(" listening", pal[5], x+2+(listenerList.length+"").length, y+4);
     counters[3] = " ".repeat((listenerList.length+"").length+10);
-    queueTextToXY(`host: ${state.userModel.username}\n${timer%64<32?"inspired by ":"tune in here! ↘"}`, pal[1], x+2, y+5, _, _, {italic:1});
-    if (timer%64<32) {
+    queueTextToXY(`host: ${state.userModel.username}`, pal[1], x+2, y+5, _, _, {italic:1});
+    if (r_timer%64<32) {
+        queueTextToXY("inspired by ", pal[1], x+2, y+6, _, _, {italic:1});
         queueTextToXY("Boo's Beats!", 0xa6a6a6, x+14, y+6, _, _, {italic:1})
-    } else if (timer%64==32) {
-        queueTextToXY("         ", pal[0], x+17, y+6);
+    } else {
+        if (r_timer%64==32) queueTextToXY("         ", pal[0], x+17, y+6);
+        queueTextToXY("tune in here! ↘", pal[1], x+2, y+6, _, _, {bold:1,italic:1})
     }
-    queueTextToXY("≫ files.catbox.moe/yxg22k.js", palnum > 1 ? pal[5] : palnum ? 0x2ad0be : 0x54e58b, x+6, y+7, _, _,
-        {bold: (timer+32)%64<18 ? timer%4/2 < 1 : 0});
-    queueTextToXY("  \n".repeat(6), pal[0], x+1+timer%17*2, y+1, _, -1)
-    flushQueue();
+    queueTextToXY("≫ files.catbox.moe/yxg22k.js", r_palnum > 1 ? pal[5] : r_palnum ? 0x2ad0be : 0x54e58b, x+6, y+7, _, _, {bold: (r_timer+32)%64<18 ? r_timer%4/2<1 : 0});
+    queueTextToXY("  \n".repeat(6), pal[0], x+1+r_timer%17*2, y+1, _, -1);
+    queueTextToXY("#".repeat(r_anncSpace+r_anncPadding*2), 0x2a7346, x+5, y+9);
+    let nextAnnc;
+    if (r_dispAnnc) {
+        let anncSpace = 24-[...r_dispAnnc[1]??""].length-!!(r_dispAnnc[1]??"".length);
+        let headerDisp = getScrollText(r_dispAnnc[0]??"welcome to spawn",
+                              anncSpace, r_anncTimer - 4).replace(/ | /g, "\0");
+        queueTextToXY(headerDisp, 0x54e58b, x+6, y+9);
+        let footerDisp = getScrollText(r_dispAnnc[1]??"",
+                             24 - Math.max(0, [...headerDisp].length-!!(headerDisp.length)),
+                             r_anncTimer - 4).replace(/ | /g, "\0");
+        queueTextToXY(footerDisp, 0x54e58b, x+30-[...footerDisp].length, y+9);
+        if (r_anncTimer >= 32 && r_anncTimer >= [...r_dispAnnc[0]??""].length - anncSpace + 12 || !r_dispAnnc) {
+            nextAnnc = true
+        }
+    } else {nextAnnc = true}
+    r_anncTimer += 1;
+    if (nextAnnc) {
+        r_dispAnnc = r_annc[(r_annc.indexOf(r_dispAnnc)+1) % r_annc.length];
+        r_anncTimer = 0;
+    }
+    return flushQueue();
 }
-var timer = 0;
 async function canvasRadioMain() {
     let a = abortCount;
     while (abortCount == a) {
         makeRadio(...radioPos);
-        ++timer;
+        ++r_timer;
         await sleep(200);
     }
-}
-function shutOffRadio() {
-    queueTextToXY("offline", 0xff0000, radioPos[0]+27, radioPos[1], _, 1, {bold:1});
-    makeRadio(...radioPos);
-    abortCount++;
 }
 async function startRadio() {
     canvasRadioMain();
@@ -248,6 +226,11 @@ async function startRadio() {
     network.cmd("limeradio_change "+ytobject.getVideoData().video_id, true);
     await sleep(500);
     network.cmd("limeradio_seek "+ytobject.getCurrentTime(), true);
+}
+function shutOffRadio() {
+    queueTextToXY("offline", 0xff0000, radioPos[0]+27, radioPos[1], _, 1, {bold:1});
+    makeRadio(...radioPos);
+    abortCount++;
 }
 menu.addOption("Load video", function(){
     let id = prompt("gimme video id...", "ci5MzuiXBJA");
@@ -272,8 +255,8 @@ menu.addOption("Load playlist by ID", function(){
 })
 menu.addOption("Play requests next in playlist", ()=>{doPlaylistRequests(...requests.map(e=>e[1]));requests = []});
 menu.addCheckboxOption("Hide video", ()=>ytcontain.style.display="none", ()=>ytcontain.style.display="");
-menu.addOption("Increment palette", ()=>palnum = (palnum+1)%5);
-menu.addOption("Decrement palette", ()=>palnum = mod(palnum-1, 5));
+menu.addOption("Increment palette", ()=>r_palnum = (r_palnum+1)%5);
+menu.addOption("Decrement palette", ()=>r_palnum = mod(r_palnum-1, 5));
 menu.addOption("Start radio", function(){
     radioPos ??= convertTileToXY(...cursorCoords.swap(1, 2));
     startRadio();
@@ -282,8 +265,4 @@ w.doAnnounce("Use the menu to start writing the radio to the canvas.");
 menu.addOption("Shut off radio", ()=>shutOffRadio());
 menu.addOption("Relocate radio", function(){
     radioPos = convertTileToXY(...cursorCoords.swap(1, 2));
-});
-menu.addOption("Start and relocate radio", function(){
-    radioPos = convertTileToXY(...cursorCoords.swap(1, 2));
-    startRadio();
 });
