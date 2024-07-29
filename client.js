@@ -9,7 +9,10 @@ document.body.appendChild(ytcontain);
 player = document.createElement("div");
 player.id = "player";
 ytcontain.appendChild(player);
-var listeningTo = prompt("enter broadcaster's username", "lime.owot");
+var listeningTo = "lime.owot";
+w.showChat();
+alert("if you're not listening to 'lime.owot', do /radio in the chatbox and then the username shown after 'host:' on the radio (yes, nothing being there is intentional)");
+client_commands.radio = e=>{listeningTo=e[0];reping()}
 w.broadcastReceive(1);
 function reping() {
     let once;
