@@ -43,6 +43,7 @@ w.loadScript("https://www.youtube.com/player_api", async function(){
 			ytPaused = true
 		} else if (s == 3) {
 			network.cmd("limeradio_seek "+ytobject.getCurrentTime(), true);
+            currentVideo = id;
 			ytPaused = false
 		}
 	})
@@ -50,6 +51,7 @@ w.loadScript("https://www.youtube.com/player_api", async function(){
 	player = ytobject.g;
 });
 var currentVideo = "ci5MzuiXBJA";
+network.cmd("limeradio_change "+currentVideo, true);
 async function changeVideo(id="ci5MzuiXBJA") {
 	network.cmd("limeradio_change "+id, true);
 	if (id == currentVideo) {
