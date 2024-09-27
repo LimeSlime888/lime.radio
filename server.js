@@ -43,7 +43,7 @@ w.loadScript("https://www.youtube.com/player_api", async function(){
 			ytPaused = true
 		} else if (s == 3) {
 			network.cmd("limeradio_seek "+ytobject.getCurrentTime(), true);
-            currentVideo = id;
+			currentVideo = id;
 			ytPaused = false
 		}
 	})
@@ -78,7 +78,7 @@ function handleRequest(arg, user) {
 		request.push(data.items[0].snippet.title);
 		r_requests.push(request);
 		w.doAnnounce((user??"An anon")+" r_requests "+request[1]+" ("+request[2]+")", "request");
-        r_reqSound.currentTime = 0; r_reqSound.play();
+		r_reqSound.currentTime = 0; r_reqSound.play();
 	});
 }
 async function pushToPlaylist(...id) {
@@ -139,31 +139,31 @@ w.on("cmd", function(e){
 var radioPos;
 var counters = ["", "", "", ""];
 function queueProgressBar(x, y, pal) {
-    let time = [ytobject.getCurrentTime(), (ytobject.getDuration()??0).toFixed(3)];
-    queueTextToXY([...counters[1]].fill(" ").join(""), 0x96b4a3, x, y);
-    let p = (ytobject.getPlayerState() ? time[0].toFixed(3) : time[1]) ?? 0;
-    queueTextToXY(p, pal[1], x, y);
-    queueTextToXY(" / "+time[1], pal[2], (p+"").length+x, y);
-    counters[1] = p + " / " + time[1];
-    let tl = Math.min(0, (time[0] - time[1]).toFixed(3));
-    queueTextToXY([...counters[2]].fill(" ").join(""), 0x2a7346, 32-[...counters[2]].length+x, y)
-    counters[2] = tl+"";
-    queueTextToXY(tl, pal[4], 32-(tl+"").length+x, y);
-    let bars = time[0] / time[1] * 32;
-    let dx = 0;
-    if (ytobject.getPlayerState()) {
-        while (dx < Math.min(32, Math.floor(bars))) {
-            queueCharToXY("=", pal[1], dx+x, y+1);dx++;
-        }
-        if (bars%1 >= 0.5 || bars >= 31 & bars < 32) { queueCharToXY("-", pal[3], dx+x, y+1);dx++ }
-        while (dx < 32) {
-            queueCharToXY("·", pal[4], dx+x, y+1);dx++;
-        }
-    } else {
-        while (dx < 32) {
-            queueCharToXY("=", rgb_to_int(...hsv_to_rgb(r_timer*10)), dx+x, y+1);dx++;
-        }
-    }
+	let time = [ytobject.getCurrentTime(), (ytobject.getDuration()??0).toFixed(3)];
+	queueTextToXY([...counters[1]].fill(" ").join(""), 0x96b4a3, x, y);
+	let p = (ytobject.getPlayerState() ? time[0].toFixed(3) : time[1]) ?? 0;
+	queueTextToXY(p, pal[1], x, y);
+	queueTextToXY(" / "+time[1], pal[2], (p+"").length+x, y);
+	counters[1] = p + " / " + time[1];
+	let tl = Math.min(0, (time[0] - time[1]).toFixed(3));
+	queueTextToXY([...counters[2]].fill(" ").join(""), 0x2a7346, 32-[...counters[2]].length+x, y)
+	counters[2] = tl+"";
+	queueTextToXY(tl, pal[4], 32-(tl+"").length+x, y);
+	let bars = time[0] / time[1] * 32;
+	let dx = 0;
+	if (ytobject.getPlayerState()) {
+		while (dx < Math.min(32, Math.floor(bars))) {
+			queueCharToXY("=", pal[1], dx+x, y+1);dx++;
+		}
+		if (bars%1 >= 0.5 || bars >= 31 & bars < 32) { queueCharToXY("-", pal[3], dx+x, y+1);dx++ }
+		while (dx < 32) {
+			queueCharToXY("·", pal[4], dx+x, y+1);dx++;
+		}
+	} else {
+		while (dx < 32) {
+			queueCharToXY("=", rgb_to_int(...hsv_to_rgb(r_timer*10)), dx+x, y+1);dx++;
+		}
+	}
 }
 var r_palnum = 1;
 function r_getPal(n=r_palnum??1) {
@@ -193,9 +193,9 @@ function r_getPal(n=r_palnum??1) {
 var r_timer = 0;
 var r_anncEnabled = true;
 var r_annc = [
-    ["i've got basically nothing to put here uhhhh i'll just"],
-    ["mrow mrrp OwO :3 >w< meow mreow mrow >:3 help the voices are cominb back"],
-    ["btw requests will only be seen from (6am weekend, 3pm weekdays) to 9pm, sorry!"]
+	["i've got basically nothing to put here uhhhh i'll just"],
+	["mrow mrrp OwO :3 >w< meow mreow mrow >:3 help the voices are cominb back"],
+	["btw requests will only be seen from (6am weekend, 3pm weekdays) to 9pm, sorry!"]
 ]; // [prefix, suffix];
 var r_anncSpace = 24;
 var r_anncPadding = 1;
@@ -252,31 +252,31 @@ function makeRadio(x, y) {
 		queueTextToXY("tune in here! ↘", pal[1], x+2, y+6, _, _, {bold:1,italic:1})
 	}
 	queueTextToXY("≫ files.catbox.moe/yxg22k.js", r_palnum > 1 ? pal[5] : r_palnum ? 0x2ad0be : 0x54e58b, x+6, y+7, _, _, {bold: (r_timer+32)%64<18 ? r_timer%4/2<1 : 0});
-    queueTextToXY("  \n".repeat(6), pal[0], x+1+r_timer%17*2, y+1, _, -1);
-    if (r_anncEnabled) {
-        queueTextToXY("#".repeat(r_anncSpace+r_anncPadding*2), 0x2a7346, x+5, y+9);
-        let nextAnnc;
-        if (r_dispAnnc) {
-            let anncSpace = r_anncSpace-[...r_dispAnnc[1]??""].length-!!(r_dispAnnc[1]??"".length);
-            let headerDisp = getScrollText(r_dispAnnc[0]??"",
-                                  anncSpace, r_anncTimer - 4).replace(/ | /g, "\0");
-            queueTextToXY(headerDisp, 0x54e58b, x+6, y+9);
-            let footerDisp = getScrollText(r_dispAnnc[1]??"",
-                                 r_anncSpace - Math.max(0, [...headerDisp].length-!!(headerDisp.length)),
-                                 r_anncTimer - 4).replace(/ | /g, "\0");
-            queueTextToXY(footerDisp, 0x54e58b, x+30-[...footerDisp].length, y+9);
-            if (r_anncTimer >= 32 && r_anncTimer >= [...r_dispAnnc[0]??""].length - anncSpace + 12 || !r_dispAnnc) {
-                nextAnnc = true
-            }
-        } else {nextAnnc = true}
-        if (nextAnnc) {
-            if (r_dispAnnc) {
-                r_dispAnnc = r_annc[(r_annc.findIndex(a=>r_dispAnnc[0]==a[0]&&r_dispAnnc[1]==a[1])+1) % r_annc.length];
-            } else {r_dispAnnc = r_annc[0]}
-            r_anncTimer = -1;
-        }
-    }
-    return flushQueue();
+	queueTextToXY("  \n".repeat(6), pal[0], x+1+r_timer%17*2, y+1, _, -1);
+	if (r_anncEnabled) {
+		queueTextToXY("#".repeat(r_anncSpace+r_anncPadding*2), 0x2a7346, x+5, y+9);
+		let nextAnnc;
+		if (r_dispAnnc) {
+			let anncSpace = r_anncSpace-[...r_dispAnnc[1]??""].length-!!(r_dispAnnc[1]??"".length);
+			let headerDisp = getScrollText(r_dispAnnc[0]??"",
+								  anncSpace, r_anncTimer - 4).replace(/ | /g, "\0");
+			queueTextToXY(headerDisp, 0x54e58b, x+6, y+9);
+			let footerDisp = getScrollText(r_dispAnnc[1]??"",
+								 r_anncSpace - Math.max(0, [...headerDisp].length-!!(headerDisp.length)),
+								 r_anncTimer - 4).replace(/ | /g, "\0");
+			queueTextToXY(footerDisp, 0x54e58b, x+30-[...footerDisp].length, y+9);
+			if (r_anncTimer >= 32 && r_anncTimer >= [...r_dispAnnc[0]??""].length - anncSpace + 12 || !r_dispAnnc) {
+				nextAnnc = true
+			}
+		} else {nextAnnc = true}
+		if (nextAnnc) {
+			if (r_dispAnnc) {
+				r_dispAnnc = r_annc[(r_annc.findIndex(a=>r_dispAnnc[0]==a[0]&&r_dispAnnc[1]==a[1])+1) % r_annc.length];
+			} else {r_dispAnnc = r_annc[0]}
+			r_anncTimer = -1;
+		}
+	}
+	return flushQueue();
 }
 async function canvasRadioMain() {
 	let a = abortCount;
