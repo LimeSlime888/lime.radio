@@ -136,6 +136,35 @@ w.on("cmd", function(e){
 		listenerList.splice(e.sender, 1);
 	}
 });
+var radioPos;
+var counters = ["", "", "", ""];
+function queueProgressBar(x, y, pal) {
+    let time = [ytobject.getCurrentTime(), (ytobject.getDuration()??0).toFixed(3)];
+    queueTextToXY([...counters[1]].fill(" ").join(""), 0x96b4a3, x, y);
+    let p = (ytobject.getPlayerState() ? time[0].toFixed(3) : time[1]) ?? 0;
+    queueTextToXY(p, pal[1], x, y);
+    queueTextToXY(" / "+time[1], pal[2], (p+"").length+x, y);
+    counters[1] = p + " / " + time[1];
+    let tl = Math.min(0, (time[0] - time[1]).toFixed(3));
+    queueTextToXY([...counters[2]].fill(" ").join(""), 0x2a7346, 32-[...counters[2]].length+x, y)
+    counters[2] = tl+"";
+    queueTextToXY(tl, pal[4], 32-(tl+"").length+x, y);
+    let bars = time[0] / time[1] * 32;
+    let dx = 0;
+    if (ytobject.getPlayerState()) {
+        while (dx < Math.min(32, Math.floor(bars))) {
+            queueCharToXY("=", pal[1], dx+x, y+1);dx++;
+        }
+        if (bars%1 >= 0.5 || bars >= 31 & bars < 32) { queueCharToXY("-", pal[3], dx+x, y+1);dx++ }
+        while (dx < 32) {
+            queueCharToXY("·", pal[4], dx+x, y+1);dx++;
+        }
+    } else {
+        while (dx < 32) {
+            queueCharToXY("=", rgb_to_int(...hsv_to_rgb(r_timer*10)), dx+x, y+1);dx++;
+        }
+    }
+}
 var r_palnum = 1;
 function r_getPal(n=r_palnum??1) {
 	let pal;
