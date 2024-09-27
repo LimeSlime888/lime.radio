@@ -89,7 +89,7 @@ async function pushToPlaylist(...id) {
 	await sleep(800);
 	ytobject.seekTo(t);
 }
-async function doPlaylistr_requests(...id) {
+async function doPlaylistRequests(...id) {
 	let t = ytobject.getCurrentTime();
 	let i = ytobject.getPlaylistIndex();
 	let np = ytobject.getPlaylist() ?? [];
@@ -319,7 +319,7 @@ menu.addOption("Load playlist by ID", function(){
 		})
 	}
 })
-menu.addOption("Play r_requests next in playlist", ()=>{doPlaylistr_requests(...r_requests.map(e=>e[1]));r_requests = []});
+menu.addOption("Play requests next in playlist", ()=>{doPlaylistRequests(...r_requests.map(e=>e[1]));r_requests = []});
 menu.addCheckboxOption("Hide video", ()=>ytcontain.style.display="none", ()=>ytcontain.style.display="");
 menu.addOption("Increment palette", ()=>r_palnum = (r_palnum+1)%5);
 menu.addOption("Decrement palette", ()=>r_palnum = mod(r_palnum-1, 5));
