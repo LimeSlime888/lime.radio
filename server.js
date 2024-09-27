@@ -229,7 +229,7 @@ function makeRadio(x, y) {
 		toShow = addSpaceToFullWidth(toShow);
 		let scroll = showTitle ? r_timerMod : r_timerMod - 40;
 		scroll = Math.min(Math.max(0, scroll - 5), toShow.length-28+showTitle*5);
-		let sToShow = getScrollText(addSpaceToFullWidth(toShow), 28-showTitle*5, scroll);
+		let sToShow = getScrollText(toShow, 28-showTitle*5, scroll);
 		queueTextToXY(sToShow, pal[1], x+6+showTitle*5, y+1, _, _);
 		counters[0] = " ".repeat(4+showTitle*5+[...sToShow].length);
 	} else {counters[0] = ""}
