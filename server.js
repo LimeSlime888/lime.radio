@@ -35,7 +35,7 @@ w.loadScript("https://www.youtube.com/player_api", async function(){
 			} else {
 				network.cmd("limeradio_change "+ytobject.getVideoData().video_id, true);
 				currentVideo = id;
-				timer = 0;
+				r_timer = 0;
 				ytPaused = false
 			}
 		} else if (s == 2) {
