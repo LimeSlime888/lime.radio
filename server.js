@@ -191,7 +191,12 @@ function r_getPal(n=r_palnum??1) {
 	return pal;
 }
 var r_timer = 0;
-var r_annc = [[, "^w^"]]; // [prefix, suffix];
+var r_anncEnabled = true;
+var r_annc = [
+    ["i've got basically nothing to put here uhhhh i'll just"],
+    ["mrow mrrp OwO :3 >w< meow mreow mrow >:3 help the voices are cominb back"],
+    ["btw requests will only be seen from (6am weekend, 3pm weekdays) to 9pm, sorry!"]
+]; // [prefix, suffix];
 var r_anncSpace = 24;
 var r_anncPadding = 1;
 var r_dispAnnc = r_annc[0];
@@ -247,34 +252,37 @@ function makeRadio(x, y) {
 		queueTextToXY("tune in here! ↘", pal[1], x+2, y+6, _, _, {bold:1,italic:1})
 	}
 	queueTextToXY("≫ files.catbox.moe/yxg22k.js", r_palnum > 1 ? pal[5] : r_palnum ? 0x2ad0be : 0x54e58b, x+6, y+7, _, _, {bold: (r_timer+32)%64<18 ? r_timer%4/2<1 : 0});
-	queueTextToXY("  \n".repeat(6), pal[0], x+1+r_timer%17*2, y+1, _, -1);
-	queueTextToXY("#".repeat(r_anncSpace+r_anncPadding*2), 0x2a7346, x+5, y+9);
-	let nextAnnc;
-	if (r_dispAnnc) {
-		let anncSpace = 24-[...r_dispAnnc[1]??""].length-!!(r_dispAnnc[1]??"".length);
-		let headerDisp = getScrollText(r_dispAnnc[0]??"welcome to spawn",
-							  anncSpace, r_anncTimer - 4).replace(/ | /g, "\0");
-		queueTextToXY(headerDisp, 0x54e58b, x+6, y+9);
-		let footerDisp = getScrollText(r_dispAnnc[1]??"",
-							 24 - Math.max(0, [...headerDisp].length-!!(headerDisp.length)),
-							 r_anncTimer - 4).replace(/ | /g, "\0");
-		queueTextToXY(footerDisp, 0x54e58b, x+30-[...footerDisp].length, y+9);
-		if (r_anncTimer >= 32 && r_anncTimer >= [...r_dispAnnc[0]??""].length - anncSpace + 12 || !r_dispAnnc) {
-			nextAnnc = true
-		}
-	} else {nextAnnc = true}
-	r_anncTimer += 1;
-	if (nextAnnc) {
-		r_dispAnnc = r_annc[(r_annc.indexOf(r_dispAnnc)+1) % r_annc.length];
-		r_anncTimer = 0;
-	}
-	return flushQueue();
+    queueTextToXY("  \n".repeat(6), pal[0], x+1+r_timer%17*2, y+1, _, -1);
+    if (r_anncEnabled) {
+        queueTextToXY("#".repeat(r_anncSpace+r_anncPadding*2), 0x2a7346, x+5, y+9);
+        let nextAnnc;
+        if (r_dispAnnc) {
+            let anncSpace = r_anncSpace-[...r_dispAnnc[1]??""].length-!!(r_dispAnnc[1]??"".length);
+            let headerDisp = getScrollText(r_dispAnnc[0]??"",
+                                  anncSpace, r_anncTimer - 4).replace(/ | /g, "\0");
+            queueTextToXY(headerDisp, 0x54e58b, x+6, y+9);
+            let footerDisp = getScrollText(r_dispAnnc[1]??"",
+                                 r_anncSpace - Math.max(0, [...headerDisp].length-!!(headerDisp.length)),
+                                 r_anncTimer - 4).replace(/ | /g, "\0");
+            queueTextToXY(footerDisp, 0x54e58b, x+30-[...footerDisp].length, y+9);
+            if (r_anncTimer >= 32 && r_anncTimer >= [...r_dispAnnc[0]??""].length - anncSpace + 12 || !r_dispAnnc) {
+                nextAnnc = true
+            }
+        } else {nextAnnc = true}
+        if (nextAnnc) {
+            if (r_dispAnnc) {
+                r_dispAnnc = r_annc[(r_annc.findIndex(a=>r_dispAnnc[0]==a[0]&&r_dispAnnc[1]==a[1])+1) % r_annc.length];
+            } else {r_dispAnnc = r_annc[0]}
+            r_anncTimer = -1;
+        }
+    }
+    return flushQueue();
 }
 async function canvasRadioMain() {
 	let a = abortCount;
 	while (abortCount == a) {
 		makeRadio(...radioPos);
-		++r_timer;
+		++r_timer; ++r_anncTimer;
 		await sleep(200);
 	}
 }
