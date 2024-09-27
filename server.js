@@ -61,7 +61,7 @@ async function changeVideo(id="ci5MzuiXBJA") {
 	currentVideo = id;
 	r_timer = 0;
 }
-w.doAnnounce("loading r_requests...", "request");
+w.doAnnounce("loading requests...", "request");
 w.doAnnounce("", "request");
 w.ui.announcements.request.text.addEventListener("click", function(){
 	changeVideo(r_requests.pop()[1]);
@@ -77,7 +77,7 @@ function handleRequest(arg, user) {
 		if (!data.items[0]) return;
 		request.push(data.items[0].snippet.title);
 		r_requests.push(request);
-		w.doAnnounce((user??"An anon")+" r_requests "+request[1]+" ("+request[2]+")", "request");
+		w.doAnnounce((user??"An anon")+" requests "+request[1]+" ("+request[2]+")", "request");
 		r_reqSound.currentTime = 0; r_reqSound.play();
 	});
 }
