@@ -68,6 +68,7 @@ w.ui.announcements.request.text.addEventListener("click", function(){
 	w.ui.announcements.request.close.click();
 })
 var r_requests = [];
+const r_reqSound = new Audio("https://files.catbox.moe/t2qv84.wav");
 function handleRequest(arg, user) {
 	let id = arg[1];
 	if (r_requests.some(e=>e[0]==id)) return;
@@ -77,6 +78,7 @@ function handleRequest(arg, user) {
 		request.push(data.items[0].snippet.title);
 		r_requests.push(request);
 		w.doAnnounce((user??"An anon")+" r_requests "+request[1]+" ("+request[2]+")", "request");
+        r_reqSound.currentTime = 0; r_reqSound.play();
 	});
 }
 async function pushToPlaylist(...id) {
