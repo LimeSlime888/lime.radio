@@ -29,7 +29,18 @@ w.loadScript("https://www.youtube.com/player_api", async function(){
 	ytobject.addEventListener("onStateChange", function(){
 		let s = ytobject.getPlayerState();
 		let id = ytobject.getVideoData().video_id;
-		if (s == 1 && currentVideo != id) {
+		if (s == 0) {
+            if (currentPlaylist) {
+                let nextVideo = currentPlaylist[currentPlaylistIndex+1];
+                if (nextVideo) {
+                    currentPlaylistIndex += 1;
+                    changeVideo(nextVideo)
+                } else if (playlistLoop) {
+                    currentPlaylistIndex = 0;
+                    changeVideo(currentPlaylist[0])
+                }
+            }
+        } else if (s == 1 && currentVideo != id) {
 			if (currentVideo == id) {
 				network.cmd("limeradio_"+(ytPaused?"seekpause ":"seek ")+ytobject.getCurrentTime(), true);
 			} else {
@@ -51,6 +62,9 @@ w.loadScript("https://www.youtube.com/player_api", async function(){
 	player = ytobject.g;
 });
 var currentVideo = "ci5MzuiXBJA";
+var currentPlaylist = null;
+var currentPlaylistIndex = 0;
+var playlistLoop = false;
 network.cmd("limeradio_change "+currentVideo, true);
 async function changeVideo(id="ci5MzuiXBJA") {
 	network.cmd("limeradio_change "+id, true);
@@ -81,23 +95,12 @@ function handleRequest(arg, user) {
 		r_reqSound.currentTime = 0; r_reqSound.play();
 	});
 }
-async function pushToPlaylist(...id) {
-	let t = ytobject.getCurrentTime();
-	let i = ytobject.getPlaylistIndex();
-	let np = (ytobject.getPlaylist() ?? []).concat(...id);
-	ytobject.loadPlaylist(np, i);
-	await sleep(800);
-	ytobject.seekTo(t);
+function seekThroughPlaylist(i) {
+    currentPlaylistIndex = i;
+    changeVideo(currentPlaylist[currentPlaylistIndex]);
 }
 async function doPlaylistRequests(...id) {
-	let t = ytobject.getCurrentTime();
-	let i = ytobject.getPlaylistIndex();
-	let np = ytobject.getPlaylist() ?? [];
-	np.splice(i+1, 0, ...id);
-	ytobject.loadPlaylist(np, i);
-	w.doAnnounce("", "request");
-	await sleep(800);
-	ytobject.seekTo(t);
+    currentPlaylist.splice(currentPlaylistIndex+1, 0, ...id);
 }
 var abortCount = 0;
 var listenerList = [];
@@ -177,7 +180,9 @@ function r_getPal(n=r_palnum??1) {
 	} else if (n == 4) {
 		pal = [0x551111, 0xdd3333, 0x771111, 0xaa2222, 0x771111, 0xaa2222];
 	} else if (n == 5) {
-		pal = [
+		pal = [0xff0000, 0xffff00, 255, 0x808080, 255, 0x8000];
+    } else if (n == 999) {
+        pal = [
 			rgb_to_int(...hsv_to_rgb(r_timer*15, 0.2, 0.7)),
 			rgb_to_int(...hsv_to_rgb(r_timer*15, 0.8, 0.9)),
 			rgb_to_int(...hsv_to_rgb(r_timer*15, 0.8, 0.45)),
@@ -286,12 +291,12 @@ async function canvasRadioMain() {
 		await sleep(200);
 	}
 }
-async function startRadio() {
-	canvasRadioMain();
-	listenChecker();
-	network.cmd("limeradio_change "+ytobject.getVideoData().video_id, true);
-	await sleep(500);
-	network.cmd("limeradio_seek "+ytobject.getCurrentTime(), true);
+async function startRadio(interval=200) {
+    canvasRadioMain(interval);
+    listenChecker();
+    network.cmd("limeradio_change "+ytobject.getVideoData().video_id, true);
+    await sleep(500);
+    network.cmd("limeradio_seek "+ytobject.getCurrentTime(), true);
 }
 function shutOffRadio() {
 	queueTextToXY("offline", 0xff0000, radioPos[0]+27, radioPos[1], _, 1, {bold:1});
@@ -299,27 +304,19 @@ function shutOffRadio() {
 	abortCount++;
 }
 menu.addOption("Load video", function(){
-	let id = prompt("gimme video id...", "ci5MzuiXBJA");
-	if (id) changeVideo(id);
-})
+    let id = prompt("gimme video id...", "ci5MzuiXBJA");
+    if (id) changeVideo(id);
+});
 menu.addOption("Load playlist", function(){
-	let ids = prompt("gimme video ids and separate with comma no space...!",
-					 `msiqgQe7EWE,T31VAEkxi98,zNd4apsr3WE`.replaceAll("\n", ""));
-	if (ids) {
-		ids = ids.split(",");
-		ytobject.loadPlaylist(ids);
-	}
-})
-menu.addOption("Load playlist by ID", function(){
-	let id = prompt("gimme playlist id...", "PLnQAp98pIPCiJfA3pDEEwjRzWRshuiMPu");
-	if (id) {
-		ytobject.loadPlaylist({
-			listType: "playlist",
-			list: id
-		})
-	}
-})
+    let ids = prompt("gimme video ids and separate with comma no space...!",
+                     `msiqgQe7EWE,T31VAEkxi98,zNd4apsr3WE`.replaceAll("\n", ""));
+    if (ids) {
+        currentPlaylist = ids.split(",");
+        seekThroughPlaylist(0);
+    }
+});
 menu.addOption("Play requests next in playlist", ()=>{doPlaylistRequests(...r_requests.map(e=>e[1]));r_requests = []});
+menu.addCheckboxOption("Playlist loops", ()=>playlistLoop=true, ()=>playlistLoop=false);
 menu.addCheckboxOption("Hide video", ()=>ytcontain.style.display="none", ()=>ytcontain.style.display="");
 menu.addOption("Increment palette", ()=>r_palnum = (r_palnum+1)%5);
 menu.addOption("Decrement palette", ()=>r_palnum = mod(r_palnum-1, 5));
