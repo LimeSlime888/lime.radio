@@ -337,15 +337,6 @@ function makeRadio(x, y) {
         queueTextToXY("tune in here! ↘", pal[1], x+2, y+6, _, _, {bold:1,italic:1})
     }
     queueTextToXY("≫ files.catbox.moe/yxg22k.js", r_palnum > 1 ? pal[5] : r_palnum ? 0x2ad0be : 0x54e58b, x+6, y+7, _, _, {bold: (r_timer+32)%64<18 ? r_timer%4/2<1 : 0});
-    // queueCharToXY("o", 0x54e58b, x+26, y+13);
-    // queueTextToXY("..", 0xbcf1, x+23, y+13);
-    // queueTextToXY(".=.", 0x3ca363, x+25, y+12);
-    // queueCharToXY("*", 0x2a7346, x+25, y+13, _, _, {bold:1});
-    // queueCharToXY("*", 0x2a7346, x+27, y+13, _, _, {bold:1});
-    // queueCharToXY("_", 0x54e58b, x+28, y+13);
-    // queueCharToXY("_", 0x2a7346, x+29, y+13);
-    // queueCharToXY("z", 0x2ad0be, x+28, y+11);
-    // queueCharToXY("z", 0x2ad0be, x+29, y+10);
 	queueTextToXY("  \n".repeat(6), pal[0], x+1+r_timer%17*2, y+1, _, -1);
     if (r_anncEnabled) {
         queueTextToXY("#".repeat(r_anncSpace+r_anncPadding*2), 0x2a7346, x+r_relAnncPos[0], y+r_relAnncPos[1]);
