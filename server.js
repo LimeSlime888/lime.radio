@@ -1,18 +1,39 @@
-ytcontain = document.createElement("span");
-ytcontain.style.top = "0";
-ytcontain.style.position = "absolute";
-ytcontain.style.padding = "4px 4px 48px";
-ytcontain.style.background = "#54e58b";
+radiocontain = document.createElement("span");
+radiocontain.style.top = "0";
+radiocontain.style.position = "absolute";
+radiocontain.style.padding = "4px 4px 48px";
+radiocontain.style.background = "#54e58b";
 west_gui.style.zIndex = 1;
-ytdrag = draggable_element(ytcontain);
-document.body.appendChild(ytcontain);
+ytdrag = draggable_element(radiocontain);
+document.body.appendChild(radiocontain);
 var ytPaused;
 var currentVideo = "ci5MzuiXBJA";
-async function loadFrame(){
+var audioPlayer = new Audio;
+audioPlayer.addEventListener("ended", function(){
+    if (currentPlaylist && currentVideo.startsWith("src:")) {
+        let nextVideo = currentPlaylist[currentPlaylistIndex+1];
+        if (nextVideo) {
+            currentPlaylistIndex += 1;
+            changeVideo(nextVideo)
+        } else if (playlistLoop) {
+            currentPlaylistIndex = 0;
+            changeVideo(currentPlaylist[0])
+        }
+    }
+});
+audioPlayer.addEventListener("click", function(){
+    network.cmd("limeradio_seek "+audioPlayer.currentTime, true);
+});
+audioPlayer.controls = true;
+audioPlayer.style.display = "none";
+radiocontain.appendChild(audioPlayer);
+// [ytID]
+// src:[url]
+async function loadPlayer(){
     if (window.player) player.remove();
     player = document.createElement("div");
     player.id = "player";
-    ytcontain.appendChild(player);
+    radiocontain.appendChild(player);
     ytobject = new YT.Player("player", {
         height: '270',
         width: '480',
@@ -26,7 +47,7 @@ async function loadFrame(){
         let s = ytobject.getPlayerState();
         let id = ytobject.getVideoData().video_id;
         if (s == 0) {
-            if (currentPlaylist) {
+            if (currentPlaylist && !currentVideo.startsWith("src:")) {
                 let nextVideo = currentPlaylist[currentPlaylistIndex+1];
                 if (nextVideo) {
                     currentPlaylistIndex += 1;
@@ -64,18 +85,51 @@ w.loadScript("https://www.youtube.com/player_api", async function(){
             if (YT.Player) return r();
         }
     });
-    loadFrame();
+    loadPlayer();
 });
 var currentPlaylist = null;
 var currentPlaylistIndex = 0;
 var playlistLoop = false;
 network.cmd("limeradio_change "+currentVideo, true);
+async function fadeOutYT() {
+    ytobject.stopVideo();
+    audioPlayer.style.display = "block";
+    audioPlayer.style.opacity = 0;
+    player.style.opacity = 1;
+    while (!(audioPlayer.style.opacity == 1 && player.style.opacity == 0)) {
+        player.style.opacity = Math.max(0, +player.style.opacity - 1/128);
+        audioPlayer.style.opacity = Math.min(1, +audioPlayer.style.opacity + 1/128)
+        if (player.style.opacity <= 0) { player.style.display = "none" }
+        if (audioPlayer.style.opacity >= 1) { audioPlayer.style.opacity = 1 }
+        await sleep(10);
+    }
+}
+async function fadeOutAudio() {
+    audioPlayer.pause();
+    player.style.display = "";
+    player.style.opacity = 0;
+    audioPlayer.style.opacity = 1;
+    while (!(player.style.opacity == 1 && audioPlayer.style.opacity == 0)) {
+        audioPlayer.style.opacity = Math.max(0, +audioPlayer.style.opacity - 1/128);
+        player.style.opacity = Math.min(1, +player.style.opacity + 1/128)
+        if (audioPlayer.style.opacity <= 0) { audioPlayer.style.display = "none" }
+        if (player.style.opacity >= 1) { player.style.opacity = 1 }
+        await sleep(10);
+    }
+}
 async function changeVideo(id="ci5MzuiXBJA") {
     network.cmd("limeradio_change "+id, true);
     if (id == currentVideo) {
-        ytobject.seekTo(0);return
+        if (currentVideo.startsWith("src:")) { audioPlayer.currentTime = 0; audioPlayer.play() }
+        else { ytobject.seekTo(0) }
+        return
+    } else if (id.startsWith("src:")) {
+        if (!currentVideo.startsWith("src:")) { fadeOutYT() }
+        audioPlayer.currentTime = 0; audioPlayer.src = id.slice(4); audioPlayer.play();
+    } else {
+        if (currentVideo.startsWith("src:")) { fadeOutAudio() }
+        ytobject.loadVideoById(id)
     }
-    ytobject.loadVideoById(id);
     currentVideo = id;
     r_timer = 0;
 }
@@ -91,11 +145,14 @@ function handleRequest(arg, user) {
     let id = arg[1];
     if (r_requests.some(e=>e[0]==id)) return;
     let request = [user, id];
+    if (id.startsWith("src:")) {
+        return w.doAnnounce((user??"An anon")+" requests "+id)
+    }
     fetch("https://www.googleapis.com/youtube/v3/videos?part=snippet&id="+id+"&key=AIzaSyCczAe-Z9LG9Ie46OovCFX9A1J2Up8bE2U").then(e=>e.json()).then(function(data) {
         if (!data.items[0]) return;
         request.push(data.items[0].snippet.title);
         r_requests.push(request);
-        w.doAnnounce((user??"An anon")+" requests "+request[1]+" ("+request[2]+")", "request");
+        w.doAnnounce((user??"An anon")+" requests "+id+" ("+request[2]+")", "request");
         r_reqSound.currentTime = 0; r_reqSound.play();
     });
 }
@@ -109,7 +166,16 @@ async function doPlaylistRequests(...id) {
 var abortCount = 0;
 var listenerList = [];
 function handlePing(arg, e) {
-    network.cmd("limeradio_pong "+currentVideo+" "+ytobject.getCurrentTime()+" "+ytPaused, true);
+    let time;
+    let paused;
+    if (currentVideo.startsWith("src:")) {
+        time = audioPlayer.currentTime;
+        paused = audioPlayer.paused;
+    } else {
+        time = ytobject.getCurrentTime();
+        paused = ytPaused;
+    }
+    network.cmd("limeradio_pong "+currentVideo+" "+time+" "+paused, true);
     if (listenerList.map(e=>e[0]).includes(e.sender)) return;
     listenerList.push([e.sender, e.username]);
 }
@@ -146,9 +212,16 @@ w.on("cmd", function(e){
 var radioPos;
 var counters = ["", "", "", ""];
 function queueProgressBar(x, y, pal) {
-    let time = [ytobject.getCurrentTime(), (ytobject.getDuration()??0).toFixed(3)];
+    let time, p;
+    if (currentVideo.startsWith("src:")) {
+        time = [audioPlayer.currentTime, audioPlayer.duration];
+        if (isNaN(time[1])) time[1] = 0;
+        p = (audioPlayer.ended ? time[1] : time[0].toFixed(3)) ?? 0;
+    } else {
+        time = [ytobject.getCurrentTime(), (ytobject.getDuration()??0).toFixed(3)];
+        p = (ytobject.getPlayerState() ? time[0].toFixed(3) : time[1]) ?? 0;
+    }
     queueTextToXY([...counters[1]].fill(" ").join(""), 0x96b4a3, x, y);
-    let p = (ytobject.getPlayerState() ? time[0].toFixed(3) : time[1]) ?? 0;
     queueTextToXY(p, pal[1], x, y);
     queueTextToXY(" / "+time[1], pal[2], (p+"").length+x, y);
     counters[1] = p + " / " + time[1];
@@ -158,7 +231,7 @@ function queueProgressBar(x, y, pal) {
     queueTextToXY(tl, pal[4], 32-(tl+"").length+x, y);
     let bars = time[0] / time[1] * 32;
     let dx = 0;
-    if (ytobject.getPlayerState()) {
+    if (currentVideo.startsWith("src:") ? !audioPlayer.ended : ytobject.getPlayerState()) {
         while (dx < Math.min(32, Math.floor(bars))) {
             queueCharToXY("=", pal[1], dx+x, y+1);dx++;
         }
@@ -236,11 +309,11 @@ function makeRadio(x, y) {
     queueTextToXY("lime.radio", 0x54e58b, x+2, y, _, _, {bold:1});
     queueTextToXY("'"+"=".repeat(34)+"'", pal[0], x, y+7);
     queueTextToXY("|\n".repeat(6), pal[0], x+35, y+1);
-    let data = ytobject.getVideoData();
+    let data = currentVideo.startsWith("src:") ? {title: currentVideo.slice(4)} : ytobject.getVideoData();
     queueTextToXY([...counters[0]].fill(" ").join(""), pal[0], x+2, y+1);
     if (data) {
         let r_timerMod = r_timer%64
-        let showTitle = r_timerMod < 40;
+        let showTitle = r_timerMod < 40 || currentVideo.startsWith("src:");
         queueTextToXY(showTitle ? "playing: " : "by: ", pal[1], x+2, y+1);
         let toShow = (showTitle ? data.title : data.author) ?? "loading...";
         toShow = addSpaceToFullWidth(toShow);
@@ -264,6 +337,15 @@ function makeRadio(x, y) {
         queueTextToXY("tune in here! ↘", pal[1], x+2, y+6, _, _, {bold:1,italic:1})
     }
     queueTextToXY("≫ files.catbox.moe/yxg22k.js", r_palnum > 1 ? pal[5] : r_palnum ? 0x2ad0be : 0x54e58b, x+6, y+7, _, _, {bold: (r_timer+32)%64<18 ? r_timer%4/2<1 : 0});
+    // queueCharToXY("o", 0x54e58b, x+26, y+13);
+    // queueTextToXY("..", 0xbcf1, x+23, y+13);
+    // queueTextToXY(".=.", 0x3ca363, x+25, y+12);
+    // queueCharToXY("*", 0x2a7346, x+25, y+13, _, _, {bold:1});
+    // queueCharToXY("*", 0x2a7346, x+27, y+13, _, _, {bold:1});
+    // queueCharToXY("_", 0x54e58b, x+28, y+13);
+    // queueCharToXY("_", 0x2a7346, x+29, y+13);
+    // queueCharToXY("z", 0x2ad0be, x+28, y+11);
+    // queueCharToXY("z", 0x2ad0be, x+29, y+10);
 	queueTextToXY("  \n".repeat(6), pal[0], x+1+r_timer%17*2, y+1, _, -1);
     if (r_anncEnabled) {
         queueTextToXY("#".repeat(r_anncSpace+r_anncPadding*2), 0x2a7346, x+r_relAnncPos[0], y+r_relAnncPos[1]);
@@ -324,7 +406,7 @@ menu.addOption("Load playlist", function(){
 });
 menu.addOption("Play requests next in playlist", ()=>{doPlaylistRequests(...r_requests.map(e=>e[1]));r_requests = []});
 menu.addCheckboxOption("Playlist loops", ()=>playlistLoop=true, ()=>playlistLoop=false);
-menu.addCheckboxOption("Hide video", ()=>ytcontain.style.display="none", ()=>ytcontain.style.display="");
+menu.addCheckboxOption("Hide video", ()=>radiocontain.style.display="none", ()=>radiocontain.style.display="");
 menu.addOption("Increment palette", ()=>r_palnum = (r_palnum+1)%5);
 menu.addOption("Decrement palette", ()=>r_palnum = mod(r_palnum-1, 5));
 menu.addOption("Start radio", function(){
