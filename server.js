@@ -277,9 +277,7 @@ function r_getPal(n=r_palnum??1) {
 var r_timer = 0;
 var r_anncEnabled = true;
 var r_annc = [
-    ["i've got basically nothing to put here uhhhh i'll just"],
-    ["mrow mrrp OwO :3 >w< meow mreow mrow >:3 help the voices are cominb back"],
-    ["btw requests will only be seen from (6am weekend, 3pm weekdays) to 9pm, sorry!"]
+    ["lorem ipsum dolor sit amet consectetur", "• adipiscing elit"]
 ]; // [prefix, suffix];
 var r_anncSpace = 24;
 var r_anncPadding = 1;
