@@ -35,20 +35,23 @@ convertXYtoTile = (x,y)=>{
 	y - Math.floor(y / tileR) * tileR]
 }
 q_queue = [];
+q_queueMax = 4096;
 queueCharToXY = function (char, charColor, x, y, noUndo=true, priority=0, decoration=null, bgColor) {
-	if (q_queue.length > 4096) {return}
+	if (q_queue.length > q_queueMax) {return}
 	x = Math.floor(x);y = Math.floor(y);
 	if (!Permissions.can_color_text(state.userModel, state.worldModel)) charColor=0;
 	q_queue.push([char, charColor, x, y, noUndo, priority, decoration, bgColor]);
 }
+writeFailsafe = 1;
+writeBufferMax = 8192;
 writeCharToXY = function (char, charColor, x, y, noUndo=true, bgColor=null,
-						 bold=false, italic=false, underline=false, strike=false) {
-	if (writeBuffer.length > 8192) {return}
-	if (getCharInfoXY(x, y).protection) {return}
+						 dB=false, dI=false, dU=false, dS=false) {
+	if (writeBuffer.length > writeBufferMax) {return}
+	if (getCharInfoXY(x, y).protection >= writeFailsafe) {return}
 	x = Math.floor(x);y = Math.floor(y);
 	if (!Permissions.can_color_text(state.userModel, state.worldModel)) charColor=0;
 	writeCharTo(char, charColor, ...convertXYtoTile(x, y), noUndo, null,
-			   bgColor, bold, italic, underline, strike);
+			   bgColor, dB, dI, dU, dS);
 }
 writeTextToXY = function (text, color, x, y, noUndo=true) {
 	text = text+"";
@@ -108,7 +111,7 @@ flushQueue = function (firstCheck = true, secondCheck = true) {
 				jinfo.decoration = compress(jinfo.decoration)
 			}
 			if (jinfo.char == j[0] && jinfo.color == j[1] && jinfo.decoration == j[6]
-			   && !getLinkXY(j[2], j[3])) {
+			   && jinfo.bgColor == (j[7] ?? -1) && !getLinkXY(j[2], j[3])) {
 				q_queue.splice(i, 1);
 			} else {i++}
 		}
@@ -167,6 +170,8 @@ instaPaste = function(value){
 			charY: cursorCoords[3]
 		}, YourWorld.Color, YourWorld.BgColor);
 	var yieldItem;
+	let [prevMaxQ, prevMax] = [q_queueMax, writeBufferMax];
+	q_queueMax = writeBufferMax = Infinity;
 	while(true){
 		var res;
 		if(yieldItem) {
@@ -183,6 +188,7 @@ instaPaste = function(value){
 	}
 	write_busy = false;
 	flushQueue();
+	[q_queueMax, writeBufferMax] = [prevMaxQ, prevMax];
 }
 isLight = function (c) {return .213 * c[0] + .715 * c[1] + .072 * c[2] > 127.5}
 sleep = function(ms) {
