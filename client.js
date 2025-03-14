@@ -133,5 +133,5 @@ menu.addOption("Request multiple videos!?", async function(){
         await new Promise(r=>setTimeout(r, 200));
     }
 });
-menu.addCheckboxOption("Hide video", ()=>ytcontain.style.display="none", ()=>ytcontain.style.display="");
+menu.addCheckboxOption("Hide video", ()=>radiocontain.style.display="none", ()=>radiocontain.style.display="");
 w.doAnnounce("You can request and hide the video through the menu.");
