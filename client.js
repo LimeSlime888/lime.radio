@@ -127,7 +127,7 @@ menu.addOption("Request a video!", function(){
 menu.addOption("Request multiple videos!?", async function(){
     let id = prompt("gimme video ids and separate with comma no space...!", "id,id2,id3");
     if (!id) return;
-    ids = ids.split(",");
+    let ids = id.split(",");
     for (let i of ids) {
         network.cmd("limeradio_request "+id+" "+listeningTo, true);
         await new Promise(r=>setTimeout(r, 200));
