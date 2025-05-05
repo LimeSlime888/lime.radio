@@ -23,7 +23,8 @@ function reping() {
         time = Number(time);
         changeVideo(id);
         await new Promise(r=>setTimeout(r, 1500));
-        ytobject.seekTo(time+1.5);
+        if (id.startsWith('src:')) { audioPlayer.currentTime = time+1.5 }
+        else { ytobject.seekTo(time+1.5) }
     });
     network.cmd("limeradio_ping "+listeningTo, true);
 }
