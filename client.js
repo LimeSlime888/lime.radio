@@ -130,7 +130,7 @@ menu.addOption("Request multiple videos!?", async function(){
     if (!id) return;
     let ids = id.split(",");
     for (let i of ids) {
-        network.cmd("limeradio_request "+id+" "+listeningTo, true);
+        network.cmd("limeradio_request "+i+" "+listeningTo, true);
         await new Promise(r=>setTimeout(r, 200));
     }
 });
