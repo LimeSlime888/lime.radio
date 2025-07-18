@@ -28,7 +28,7 @@ function reping() {
     });
     network.cmd("limeradio_ping "+listeningTo, true);
 }
-var audioPlayer = new Audio;
+var audioPlayer = document.createElement('video');
 audioPlayer.controls = true;
 audioPlayer.style.display = "none";
 radiocontain.appendChild(audioPlayer);
